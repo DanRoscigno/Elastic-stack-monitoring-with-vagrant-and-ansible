@@ -20,7 +20,7 @@ and no non-stack-monitoring data is being collected.
 Note: The Vagrantfile and inventory are from the blog 
 [ELK Stack with Vagrant and Ansible](https://github.com/ashokc/ELK-Stack-with-Vagrant-and-Ansible)
 
-This uses the following Ansible roles:
+This project uses the following Ansible roles:
 
 - [elastic.elasticsearch](https://galaxy.ansible.com/elastic/elasticsearch/)
 - [elastic.beats](https://galaxy.ansible.com/elastic/beats)
@@ -31,8 +31,7 @@ This uses the following Ansible roles:
  - Vagrant
  - Virtualbox
  - Ansible
-* Make sure that the host has sufficient CPU & RAM to build 7 vms,
-* You can adjust the memory requirements in 'inventory.yml'.
+ - Sufficient CPU & RAM to build 5 vms (adjust the resource allocation in 'inventory.yml')
 
 # Commands for macOS Catalina setup
 ```
