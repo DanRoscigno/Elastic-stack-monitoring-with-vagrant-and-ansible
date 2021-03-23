@@ -81,7 +81,8 @@ User vagrant
   IdentitiesOnly yes
 ```
 
-# Set the desired Elastic Stack version in `group_vars/all.yml`
+# Set the desired Elastic Stack version
+Edit `group_vars/all.yml` and set `es_version`.
 
 # Create CA and cert files for TLS
 Note: This requires an Elasticsearch install
@@ -112,8 +113,7 @@ Note: You will be asked for an output filename.  The file will be produced in th
 /usr/share/elasticsearch/bin/elasticsearch-certutil ca --pem
 ```
 
-Make sure to unzip the output zip file into /vagrant/files/certs/
-
+Unzip the output zip file, as you will use the files in the zip file as an input to the next command.
 
 
 This is the command to build the certificates:
@@ -126,20 +126,32 @@ This is the command to build the certificates:
   --out /tmp/test4.zip
 ```
 
-Make sure to unzip the file `test4.zip` into `/vagrant/files/certs/`
+Make sure to unzip the two output files into a directory that is made available to the virtual machines built with Vagrant.  If you are working in the directory `Elastic-stack-monitoring-with-vagrant-and-ansible` then `Elastic-stack-monitoring-with-vagrant-and-ansible/files/certs` would be a good choice and work with the commands used in this tutorial.
 
 # Build the VMs with Vagrant and Virtualbox
+The `vagrant up` command shown below builds Virtualbox VMs that are specified in the file `Vagrantfile` in the current directory.  Change directory to the content of the GitHub repo for this tutorial and tun the following command:
 ```
 vagrant up --no-provision
 ```
 
-# Add passwords to Ansible Vault
-This creates a vault file in the specified dir.  When you run the command you will be in your default editor, add
-keys and values just like you would in the group_vars dir.  The playbooks used here require two entries:
- - `elastic_pass`, for example, `elastic_pass: secretPassw0rd`
-    Add the passwords that you will set when you run `elasticsearch-setup-passwords interactive`
- - `xpack.encryptedSavedObjects.encryptionKey`, for example `xpack.encryptedSavedObjects.encryptionKey: something_at_least_32_chars_long`
+# Add secrets to Ansible Vault
+By using the Ansible vault you can avoid storing your passwords in a configuration 
+repository.  When you run the `ansible-vault create` command you will be in your 
+default editor, add keys and values, and then substitute the keys in the Ansible
+templates and playbooks.  For this tutorial store a password and a Kibana encryption
+key.  Multiple passwords and API Keys should be stored in the vault.
 
+The playbooks and templates used in this tutorial require two keys:
+ - `elastic_pass`
+ - `kibana_encryptionKey`
+
+This is what your vault could contain:
+```
+elastic_pass: sup3rS3cr3t
+kibana_encryptionKey: something_at_least_32_characters
+```
+
+Here is the command to create the file in the `vars/` directory:
 ```
 ansible-vault create vars/credentials.yml
 ```
