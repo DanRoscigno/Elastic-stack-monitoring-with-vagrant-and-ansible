@@ -1,0 +1,113 @@
+- hosts: es-master-1
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_java_install: true
+    es_heap_size: "1g"
+    es_api_host: 192.168.33.25
+    es_api_basic_auth_username: "elastic" # This is the default user created by the installation of elasticsearch
+    es_api_basic_auth_password: "changeme" # This is the default password created by the installation of elasticsearch
+    es_enable_http_ssl: true
+    es_enable_transport_ssl: true
+    es_ssl_key: "files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.key"
+    es_ssl_certificate: "files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.crt"
+    es_ssl_certificate_authority: "files/certs/ca/ca.crt"
+    es_validate_certs: no
+    es_config:
+      cluster.name: "test-cluster"
+      network.host: 192.168.33.25
+      cluster.initial_master_nodes: "es-master-1"
+      http.port: 9200
+      node.data: false
+      node.master: true
+      bootstrap.memory_lock: false
+      xpack.security.authc.realms.file.file1.order: 0
+      xpack.security.authc.realms.native.native1.order: 1
+      xpack.security.http.ssl.verification_mode: "certificate"
+
+- hosts: es-data-1
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_java_install: true
+    es_heap_size: 1g
+    es_api_basic_auth_username: "elastic" # This is the default user created by the installation of elasticsearch
+    es_api_basic_auth_password: "changeme" # This is the default password created by the installation of elasticsearch
+    es_enable_http_ssl: true
+    es_enable_transport_ssl: true
+    es_ssl_key: "files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.key"
+    es_ssl_certificate: "files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.crt"
+    es_ssl_certificate_authority: "files/certs/ca/ca.crt"
+    es_validate_certs: no
+    es_api_host: 192.168.33.26
+    es_data_dirs:
+      - "/opt/elasticsearch"
+    es_config:
+      network.host: 192.168.33.26
+      cluster.name: "test-cluster"
+      cluster.initial_master_nodes: "es-master-1"
+      discovery.seed_hosts: "192.168.33.25"
+      http.port: 9200
+      node.data: true
+      node.master: false
+      bootstrap.memory_lock: false
+      xpack.security.authc.realms.file.file1.order: 0
+      xpack.security.authc.realms.native.native1.order: 1
+
+- hosts: es-data-2
+  roles:
+    - role: elastic.elasticsearch
+  vars:
+    es_java_install: true
+    es_heap_size: 1g
+    es_api_basic_auth_username: "elastic" # This is the default user created by the installation of elasticsearch
+    es_api_basic_auth_password: "changeme" # This is the default password created by the installation of elasticsearch
+    es_enable_http_ssl: true
+    es_enable_transport_ssl: true
+    es_ssl_key: "files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.key"
+    es_ssl_certificate: "files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.crt"
+    es_ssl_certificate_authority: "files/certs/ca/ca.crt"
+    es_validate_certs: no
+    es_api_host: 192.168.33.27
+    es_config:
+      network.host: 192.168.33.27
+      cluster.name: "test-cluster"
+      discovery.seed_hosts: "192.168.33.25"
+      http.port: 9200
+      node.data: true
+      node.master: false
+      bootstrap.memory_lock: false
+      xpack.security.authc.realms.file.file1.order: 0
+      xpack.security.authc.realms.native.native1.order: 1
+
+
+- hosts: es-master-1, es-data-1, es-data-2
+  pre_tasks:
+    - name: include vault for env
+      include_vars: "credentials.yml"
+      tags: ["always"]
+      no_log: true
+  tasks:
+
+    - name: configure Elasticsearch monitoring with Metricbeat
+      become: true
+      ansible.builtin.template:
+        src: elasticsearch-xpack.yml.j2
+        dest: /etc/metricbeat/modules.d/elasticsearch-xpack.yml
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: disable the system module
+      become: true
+      command: /usr/share/metricbeat/bin/metricbeat -c /etc/metricbeat/metricbeat.yml modules disable system
+
+    - name: enable the elasticsearch-xpack module
+      become: true
+      command: /usr/share/metricbeat/bin/metricbeat -c /etc/metricbeat/metricbeat.yml modules enable elasticsearch-xpack
+
+    - name: restart the metricbeat service
+      become: true
+      service:
+        name: metricbeat
+        state: restarted

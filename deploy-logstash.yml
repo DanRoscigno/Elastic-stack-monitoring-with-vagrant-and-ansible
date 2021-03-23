@@ -1,0 +1,86 @@
+- name: Install logstash (state=present is optional)
+  pre_tasks:
+    - name: include vault for env
+      include_vars: "credentials.yml"
+      tags: ["always"]
+      no_log: true
+  hosts: logstash-1
+  tasks:
+    - name: install the logstash deb 
+      become: yes
+      apt:
+        name: 'logstash'
+        state: present
+        update_cache: true
+
+    - name: configure Logstash using template
+      become: yes
+      ansible.builtin.template:
+        src: logstash.yml.j2
+        dest: /etc/logstash/logstash.yml
+        owner: logstash
+        group: logstash
+        mode: '0600'
+
+    - name: add logstash.conf using template
+      become: yes
+      ansible.builtin.template:
+        src: logstash.conf.j2
+        dest: /etc/logstash/conf.d/logstash.conf
+        owner: logstash
+        group: logstash
+        mode: '0600'
+
+    - name: configure Metricbeat on Logstash servers using template
+      become: yes
+      ansible.builtin.template:
+        src: logstash-xpack.yml.j2
+        dest: /etc/metricbeat/modules.d/logstash-xpack.yml
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: create directory with parent directories
+      become: yes
+      file:
+        path: /etc/logstash/certs
+        state: directory
+        owner: logstash
+        group: logstash
+        mode: '0755'
+
+    - name: copy ca
+      become: yes
+      ansible.builtin.copy:
+        src: /vagrant/files/certs/ca/ca.crt
+        dest: /etc/logstash/certs/ca.crt
+        remote_src: yes
+        owner: logstash
+        group: logstash
+        mode: '0600'
+
+    - name: convert logstash key to PKCS#8
+      become: yes
+      command: openssl pkcs8 -in /vagrant/files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.key -topk8 -nocrypt -out /etc/logstash/certs/{{ ansible_hostname }}.pkcs8.key
+      #become_user: logstash
+
+    - name: restart the logstash service
+      service:
+        name: logstash
+        state: restarted
+      become: true
+
+    - name: disable the system module
+      command: /usr/share/metricbeat/bin/metricbeat -c /etc/metricbeat/metricbeat.yml modules disable system
+      become: true
+
+    - name: enable the logstash-xpack module
+      command: /usr/share/metricbeat/bin/metricbeat -c /etc/metricbeat/metricbeat.yml modules enable logstash-xpack
+      become: true
+
+    - name: restart the metricbeat service
+      service:
+        name: metricbeat
+        state: restarted
+      become: true
+

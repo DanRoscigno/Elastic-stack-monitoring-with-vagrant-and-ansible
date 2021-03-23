@@ -1,0 +1,11 @@
+ansible_python_interpreter: "/usr/bin/python3"
+private_iface: eth0
+public_iface: eth1
+es_version: 7.12.0
+es_major_version: 7.x
+es_repo_base: "https://artifacts.elastic.co"
+es_repo_name: "{{ es_major_version }}"
+es_apt_key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+es_apt_url:       "deb {{ es_repo_base }}/packages/{{ es_repo_name }}/apt stable main"
+es_apt_url_old:   "deb http://packages.elastic.co/elasticsearch/{{ es_repo_name }}/debian stable main"
+es_other_apt_url: "deb {{ es_repo_base }}/packages/{{ es_repo_name }}/apt stable main"

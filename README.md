@@ -1,2 +1,257 @@
-# Elastic-stack-monitoring-with-vagrant-and-ansible
-A simple walkthrough to build a three node Elasticsearch cluster, add Logstash and Kibana, and monitor all of it with Elastic Stack Monitoring via Beats.
+# Background
+Most of my work with the Elastic Stack has been related to Kubernetes or Elastic Cloud
+and it has been a long time since I deployed the stack myself.  This is a set of
+configurations that allows me to build out several virtual machines (using Vagrant and 
+Virtualbox), and then install the stack onto those VMs in a repeatable fashion (via 
+Ansible) so that I can test ideas, write documentation, etc.
+
+I had never used Vagrant nor Ansible before writing this, and I am sure that what I have
+done is not the most efficient.  Here are my requirements:
+ - No passwords in this repo
+ - TLS used between stack components
+ - TLS used between the browser and Kibana
+ - Stack monitoring using Beats
+ - Support for both Beats and Logstash to ingest non-stack-monitoring data
+ - No simulated data 
+
+Note: Not all of these requirements are met on day one, there are no logs being collected, 
+and no non-stack-monitoring data is being collected.
+
+Note: The Vagrantfile and inventory are from the blog 
+[ELK Stack with Vagrant and Ansible](https://github.com/ashokc/ELK-Stack-with-Vagrant-and-Ansible)
+
+This uses the following Ansible roles:
+
+- [elastic.elasticsearch](https://galaxy.ansible.com/elastic/elasticsearch/)
+- [elastic.beats](https://galaxy.ansible.com/elastic/beats)
+
+
+# Prerequisites:
+ - Python 3
+ - Vagrant
+ - Virtualbox
+ - Ansible
+* Make sure that the host has sufficient CPU & RAM to build 7 vms,
+* You can adjust the memory requirements in 'inventory.yml'.
+
+# Commands for macOS Catalina setup
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+brew install pyenv
+
+pyenv install 3.9.1
+
+echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
+
+source ~/.zshrc
+
+python --version
+
+python -m pip install --upgrade pip
+
+pip install pyyaml
+
+pip install wheel
+
+pip install --upgrade pip setuptools wheel
+
+pip install pip-tools
+
+brew install rust
+
+brew install vagrant
+
+brew install virtualbox
+#( allow the system extension and reboot)
+
+vagrant plugin install vagrant-vbguest
+
+brew install ansible
+
+ansible-galaxy install elastic.elasticsearch
+ansible-galaxy install elastic.beats
+```
+
+# Configure your workstation to be able to use `vagrant ssh`
+
+There seems to be some kind of an issue with many keys being added and using ssh, so tell ssh that the vagrant user should not be allowed to use passwords
+Add this to ~/.ssh/config
+```
+User vagrant
+  IdentitiesOnly yes
+```
+
+# Set the desired Elastic Stack version in `group_vars/all.yml`
+
+# Create CA and cert files for TLS
+Note: This requires an Elasticsearch install
+Note: Use this [support blog](https://www.elastic.co/blog/configuring-ssl-tls-and-https-to-secure-elasticsearch-kibana-beats-and-logstash) as a reference!!
+
+An instance.yml file is provided.  If you add more nodes to your cluster add more entries to the instance.yml file
+and rebuild the certificates.  The file looks like this:
+```
+instances:
+  - name: "es-master-1" 
+    ip: 
+      - "192.168.33.25"
+  - name: "es-data-1"
+    ip:
+      - "192.168.33.26"
+  - name: "es-data-2"
+    ip:
+      - "192.168.33.27"
+```
+
+When this file gets used a separate certificate is created for each node, and all are signed with the CA that is also created.   By adding the IP address and hostname to each certificate Logstash will be able to connect.
+
+First you need an Elasticsearch install.  You can download and extract Elasticsearch and run the certificate binary from that download.
+
+Next generate a certificate authority (ca):
+Note: You will be asked for an output filename.  The file will be produced in the `elasticsearch` directory.  In the example below, this would be `/usr/share/elasticsearch/`
+```
+/usr/share/elasticsearch/bin/elasticsearch-certutil ca --pem
+```
+
+Make sure to unzip the output zip file into /vagrant/files/certs/
+
+
+
+This is the command to build the certificates:
+```
+/usr/share/elasticsearch/bin/elasticsearch-certutil cert \
+  --ca-cert /usr/share/elasticsearch/ca/ca.crt \
+  --ca-key /usr/share/elasticsearch/ca/ca.key \
+  --pem \
+  --in /tmp/instances.yml \
+  --out /tmp/test4.zip
+```
+
+Make sure to unzip the file `test4.zip` into `/vagrant/files/certs/`
+
+# Build the VMs with Vagrant and Virtualbox
+```
+vagrant up --no-provision
+```
+
+# Add passwords to Ansible Vault
+This creates a vault file in the specified dir.  When you run the command you will be in your default editor, add
+keys and values just like you would in the group_vars dir.  The playbooks used here require two entries:
+ - `elastic_pass`, for example, `elastic_pass: secretPassw0rd`
+    Add the passwords that you will set when you run `elasticsearch-setup-passwords interactive`
+ - `xpack.encryptedSavedObjects.encryptionKey`, for example `xpack.encryptedSavedObjects.encryptionKey: something_at_least_32_chars_long`
+
+```
+ansible-vault create vars/credentials.yml
+```
+
+Note: You can edit the credentials.yml file with `ansible-vault edit` or pop in `view`.
+
+# Monitoring with Beats
+
+Deploy the Beats that will monitor  the Elastic Stack first as the Beats will be configured
+during the deployment of Elasticsearch, Kibana, and Logstash.
+
+Install Metricbeat
+
+Note: Metricbeat will not connect until the passwords are set in Elasticsearch, which you will do in a few steps.
+
+```
+ansible-playbook -v -i inventory.yml deploy-beats.yml --ask-vault-pass
+```
+
+# Deploy Elasticsearch
+Run the Ansible playbook `deploy-elasticsearch.yml`
+```
+ansible-playbook -v -i inventory.yml deploy-elasticsearch.yml --ask-vault-pass
+
+```
+
+# Verify TLS
+
+There are several curl commands, and as we have enabled security you will be prompted for a password.  The default password for the `elastic` user is `changeme`.  You will change it in one of the steps coming up.
+
+Use the `ca/ca.crt` file that is in `files/certs/ca/ca.crt`.  You may be tempted to add a `-k` to all of your curl commands to avoid verifying the SSL cert, but test it at least once using the ca.crt
+```
+curl --cacert files/certs/ca/ca.crt \
+  -u elastic 'https://192.168.33.25:9200/_cat/nodes?v'
+```
+
+# Check the license status
+```
+curl --cacert files/certs/ca/ca.crt \
+  -u elastic 'https://192.168.33.25:9200/_license'
+```
+
+# Add a platinum license
+```
+curl --cacert files/certs/ca/ca.crt \
+  -XPUT -u elastic \
+  'https://192.168.33.25:9200/_xpack/license' \
+  -H "Content-Type: application/json" \
+  -d @/Users/droscigno/Downloads/license-release-stack-platinum.json 
+```
+
+# Verify the license change
+```
+curl --cacert files/certs/ca/ca.crt \
+  -u elastic 'https://192.168.33.25:9200/_license'
+```
+
+# Check cluster health
+```
+curl --cacert files/certs/ca/ca.crt \
+  -X GET -u elastic \
+  'https://192.168.33.25:9200/_cluster/health?level=shards&pretty'
+```
+
+# Check that the certificates are in use
+Verify that the IP Addresses that you added to the certificates are there
+```
+openssl s_client -connect 192.168.33.25:9200 \
+  </dev/null 2>/dev/null | openssl x509 -noout \
+  -text | egrep "Subject: CN=|IP Address"
+
+openssl s_client -connect 192.168.33.26:9200 \
+  </dev/null 2>/dev/null | openssl x509 -noout \
+  -text | egrep "Subject: CN=|IP Address"
+
+openssl s_client -connect 192.168.33.27:9200 \
+  </dev/null 2>/dev/null | openssl x509 -noout \
+  -text | egrep "Subject: CN=|IP Address"
+```
+
+# Set passwords
+Use a Vagrant command to run the `elasticsearch-setup-passwords` command on `es-master-1`
+
+```
+vagrant ssh -c \
+  "sudo --user=elasticsearch /usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive" \
+  es-master-1
+```
+
+# Deploy Logstash
+
+Run the Ansible playbook `deploy-logstash.yml`
+```
+ansible-playbook -v -i inventory.yml deploy-logstash.yml --ask-vault-pass
+```
+
+# Deploy Kibana
+
+Run the Ansible playbook `deploy-kibana.yml`
+```
+ansible-playbook -v -i inventory.yml deploy-kibana.yml --ask-vault-pass
+```
+
+# Open a browser to stack monitoring in Kibana
+
+When you open Stack Monitoring you will likely see that all of your Elastic 
+Stack components (except the Beats) are represented on the monitoring page.
+If they are not, you may have to enter setup mode.  Within setup mode you 
+will be prompted to download and install Metricbeat.  Skip this and close the 
+setup wizard and exit setup and you will likely have monitoring data 
+available.
+
+https://192.168.33.28:5601/app/monitoring
+

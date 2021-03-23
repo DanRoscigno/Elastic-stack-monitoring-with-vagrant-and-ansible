@@ -1,0 +1,49 @@
+- hosts: es-data-1, es-data-2, es-master-1, kibana-1, logstash-1
+  pre_tasks:
+    - name: include vault for env
+      include_vars: "credentials.yml"
+      tags: ["always"]
+      no_log: true
+  become: yes
+  tasks:
+    - name: Add the Elastic Apt signing key
+      ansible.builtin.apt_key:
+        url: "{{ es_apt_key }}"
+        state: present
+      become: yes
+    - name: create directory with parent directories
+      become: yes
+      file:
+        path: /etc/metricbeat/certs
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: copy ca
+      become: yes
+      ansible.builtin.copy:
+        src: /vagrant/files/certs/ca/ca.crt
+        dest: /etc/metricbeat/certs/ca.crt
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0600'
+
+  roles:
+    - role: elastic.beats
+  vars:
+    beats_version: "{{ es_version }}"
+    beat: metricbeat
+
+    output_conf:
+      elasticsearch:
+        hosts: ["https://192.168.33.26:9200", "https://192.168.33.27:9200"]
+        username: "elastic"
+        password: "{{ elastic_pass }}"
+        ssl.certificate_authorities: ["/etc/metricbeat/certs/ca.crt"]
+    beat_conf:
+      setup.kibana.host: "http://192.168.33.28:5601"
+      metricbeat.config.modules:
+        path: /etc/metricbeat/modules.d/*.yml
+

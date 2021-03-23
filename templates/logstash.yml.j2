@@ -1,0 +1,15 @@
+# /etc/logstash/logstash.yml
+
+node.name: "{{ ansible_hostname }}"
+pipeline.ordered: auto
+path.logs: /var/log/logstash
+path.data: /var/lib/logstash
+path.config: /etc/logstash/conf.d/*.conf
+
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.username: logstash_system
+xpack.monitoring.elasticsearch.password: "{{ elastic_pass }}"
+xpack.monitoring.elasticsearch.hosts: ["https://192.168.33.26:9200", "https://192.168.33.27:9200"]
+xpack.monitoring.elasticsearch.ssl.verification_mode: none
+
+xpack.monitoring.elasticsearch.ssl.certificate_authority: /etc/logstash/certs/ca.crt

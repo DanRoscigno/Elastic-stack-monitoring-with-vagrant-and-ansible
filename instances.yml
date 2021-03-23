@@ -1,0 +1,16 @@
+instances:
+  - name: "es-master-1" 
+    ip: 
+      - "192.168.33.25"
+  - name: "es-data-1"
+    ip:
+      - "192.168.33.26"
+  - name: "es-data-2"
+    ip:
+      - "192.168.33.27"
+  - name: 'kibana-1'
+    ip:
+      - "192.168.33.28"
+  - name: 'logstash-1'
+    ip:
+      - "192.168.33.29"

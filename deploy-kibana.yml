@@ -1,0 +1,117 @@
+- name: Install Kibana (state=present is optional)
+  pre_tasks:
+    - name: include vault for env
+      include_vars: "credentials.yml"
+      tags: ["always"]
+      no_log: true
+  hosts: kibana-1
+  vars:
+    kibana_api_host: "{{ ansible_host }}"
+    kibana_api_port: 5601
+  tasks:
+    - name: Add the Elastic Apt signing key
+      ansible.builtin.apt_key:
+        url: "{{ es_apt_key }}"
+        state: present
+      become: yes
+
+    - name: Install apt-transport-https
+      become: yes
+      block:
+      - name: Debian - Install apt-transport-https to support https APT downloads
+        apt:
+          name: apt-transport-https
+          state: present
+
+    - name: Debian - Add elastic repository
+      become: yes
+      apt_repository:
+        repo: "{{ es_apt_url }}"
+        state: present
+        update_cache: true
+
+    - name: install the Kibana deb 
+      become: yes
+      apt:
+        name: 'kibana{% if es_version is defined and es_version != "" %}={{ es_version }}{% endif %}'
+        state: present
+        allow_unauthenticated: "{{ 'no' if es_apt_key else 'yes' }}"
+        cache_valid_time: 86400
+
+    - name: configure Kibana using template
+      become: yes
+      ansible.builtin.template:
+        src: kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+        owner: kibana
+        group: kibana
+        mode: '0600'
+
+    - name: configure Metricbeat on Kibana servers using template
+      become: yes
+      ansible.builtin.template:
+        src: kibana-xpack.yml.j2
+        dest: /etc/metricbeat/modules.d/kibana-xpack.yml
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: create directory with parent directories
+      become: yes
+      file:
+        path: /etc/kibana/config/certs/
+        state: directory
+        owner: kibana
+        group: kibana
+        mode: '0755'
+
+    - name: copy ca
+      become: yes
+      ansible.builtin.copy:
+        src: /vagrant/files/certs/ca/ca.crt
+        dest: /etc/kibana/config/certs/
+        remote_src: yes
+        owner: kibana
+        group: kibana
+        mode: '0600'
+
+    - name: copy kibana cert
+      become: yes
+      ansible.builtin.copy:
+        src: /vagrant/files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.crt
+        dest: /etc/kibana/config/certs/
+        remote_src: yes
+        owner: kibana
+        group: kibana
+        mode: '0600'
+
+    - name: copy kibana key
+      become: yes
+      ansible.builtin.copy:
+        src: /vagrant/files/certs/{{ ansible_hostname }}/{{ ansible_hostname }}.key
+        dest: /etc/kibana/config/certs/
+        remote_src: yes
+        owner: kibana
+        group: kibana
+        mode: '0600'
+
+    - name: restart the Kibana service
+      service:
+        name: kibana
+        state: restarted
+      become: true
+
+    - name: disable the system module
+      command: /usr/share/metricbeat/bin/metricbeat -c /etc/metricbeat/metricbeat.yml modules disable system
+      become: true
+
+    - name: enable the kibana-xpack module
+      command: /usr/share/metricbeat/bin/metricbeat -c /etc/metricbeat/metricbeat.yml modules enable kibana-xpack
+      become: true
+
+    - name: restart the metricbeat service
+      service:
+        name: metricbeat
+        state: restarted
+      become: true
+
