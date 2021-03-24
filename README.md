@@ -78,7 +78,7 @@ ansible-galaxy install elastic.elasticsearch
 ansible-galaxy install elastic.beats
 ```
 
-# Configure your workstation to be able to use `vagrant ssh`
+# Configure your workstation for `vagrant ssh`
 
 There seems to be some kind of an issue with many keys being added and using ssh, so tell ssh that the vagrant user should not be allowed to use passwords
 Add this to ~/.ssh/config
