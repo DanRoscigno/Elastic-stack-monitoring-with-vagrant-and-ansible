@@ -1,3 +1,8 @@
+# Goal
+A repeatable, semi-automated Elastic Stack deployment that is configured to support
+Stack Monitoring.
+![Node advanced monitoring dashboard](https://raw.githubusercontent.com/DanRoscigno/Elastic-stack-monitoring-with-vagrant-and-ansible/main/images/StackMonitoring.png)
+
 # Background
 Most of my work with the Elastic Stack has been related to Kubernetes or Elastic Cloud
 and it has been a long time since I deployed the stack myself.  This is a set of
@@ -151,12 +156,16 @@ elastic_pass: sup3rS3cr3t
 kibana_encryptionKey: something_at_least_32_characters
 ```
 
+You will use the password that you set in the vault when you run the command 
+`elasticsearch-setup-passwords` later.  
+
 Here is the command to create the file in the `vars/` directory:
 ```
 ansible-vault create vars/credentials.yml
 ```
 
-Note: You can edit the credentials.yml file with `ansible-vault edit` or pop in `view`.
+Note: You can edit the credentials.yml file with `ansible-vault edit` or 
+display it with `ansible-vault view`.
 
 # Monitoring with Beats
 
@@ -165,7 +174,7 @@ during the deployment of Elasticsearch, Kibana, and Logstash.
 
 Install Metricbeat
 
-Note: Metricbeat will not connect until the passwords are set in Elasticsearch, which you will do in a few steps.
+Note: Metricbeat will not connect until the passwords are set in Elasticsearch, which you will do in a few steps.  You will be prompted for the password that you used to encrypt the vault.
 
 ```
 ansible-playbook -v -i inventory.yml deploy-beats.yml --ask-vault-pass
@@ -256,6 +265,13 @@ ansible-playbook -v -i inventory.yml deploy-kibana.yml --ask-vault-pass
 ```
 
 # Open a browser to stack monitoring in Kibana
+
+Depending on the CPU resources provided to your Kibana virtual machine your
+Kibana server may take a minute or two to become ready to accept connections.
+
+Because the TLS certificate used to encrypt the connection between your 
+browser and the Kibana server is "self signed" you will be notified that the 
+connection is not private and have to allow your browser to trust the connection.
 
 When you open Stack Monitoring you will likely see that all of your Elastic 
 Stack components (except the Beats) are represented on the monitoring page.
