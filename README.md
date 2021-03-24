@@ -24,7 +24,7 @@ Note: Not all of these requirements are met on day one, there are no logs being 
 and no non-stack-monitoring data is being collected.
 
 Note: The Vagrantfile and inventory are from the blog 
-[ELK Stack with Vagrant and Ansible](https://github.com/ashokc/ELK-Stack-with-Vagrant-and-Ansible)
+[ELK Stack with Vagrant and Ansible](https://github.com/ashokc/ELK-Stack-with-Vagrant-and-Ansible), which cites [Ansible Skeleton](https://github.com/bertvv/ansible-skeleton).
 
 This project uses the following Ansible roles:
 
