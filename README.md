@@ -1,6 +1,7 @@
 # Goal
 A repeatable, semi-automated Elastic Stack deployment that is configured to support
 Stack Monitoring.
+
 ![Node advanced monitoring dashboard](https://raw.githubusercontent.com/DanRoscigno/Elastic-stack-monitoring-with-vagrant-and-ansible/main/images/StackMonitoring.png)
 
 # Background
