@@ -1,7 +1,7 @@
 ansible_python_interpreter: "/usr/bin/python3"
 private_iface: eth0
 public_iface: eth1
-es_version: 7.12.0
+es_version: 7.13.1
 es_major_version: 7.x
 es_repo_base: "https://artifacts.elastic.co"
 es_repo_name: "{{ es_major_version }}"

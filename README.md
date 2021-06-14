@@ -165,8 +165,8 @@ Here is the command to create the file in the `vars/` directory:
 ansible-vault create vars/credentials.yml
 ```
 
-Note: You can edit the credentials.yml file with `ansible-vault edit` or 
-display it with `ansible-vault view`.
+Note: You can edit the credentials.yml file with `ansible-vault edit vars/credentials.yml` or 
+display it with `ansible-vault view vars/credentials.yml`.
 
 # Monitoring with Beats
 
@@ -181,12 +181,16 @@ Note: Metricbeat will not connect until the passwords are set in Elasticsearch, 
 ansible-playbook -v -i inventory.yml deploy-beats.yml --ask-vault-pass
 ```
 
+This command takes a while to run.  It is deploying Metricbeat on all fo the virtual machines.  At the end the summary will tell you how things went.  You should see many (25) `OK`, and many (12) `skipped` statuses.  You can scroll back through the output to see the details.
+
 # Deploy Elasticsearch
 Run the Ansible playbook `deploy-elasticsearch.yml`
 ```
 ansible-playbook -v -i inventory.yml deploy-elasticsearch.yml --ask-vault-pass
 
 ```
+
+This command takes a while to run.  It is deploying Metricbeat on all fo the virtual machines.  At the end the summary will tell you how things went.  You should see many (49 or so) `OK`, 19 or 20 `changed`, 100+ `skipped`, and 1 `ignored` statuses.  You can scroll back through the output to see the details.
 
 # Verify TLS
 
@@ -198,13 +202,42 @@ curl --cacert files/certs/ca/ca.crt \
   -u elastic 'https://192.168.33.25:9200/_cat/nodes?v'
 ```
 
+Sample output:
+```
+ip            heap.percent ram.percent cpu load_1m load_5m load_15m node.role  master name
+192.168.33.25           12          81   2    0.00    0.09     0.12 ilmr       *      es-master-1
+192.168.33.27           10          80   4    0.02    0.14     0.11 cdfhilrstw -      es-data-2
+192.168.33.26           27          80   3    0.31    0.17     0.13 cdfhilrstw -      es-data-1
+```
+
 # Check the license status
 ```
 curl --cacert files/certs/ca/ca.crt \
   -u elastic 'https://192.168.33.25:9200/_license'
 ```
 
+Sample output (look for a `type` of `basic`):
+```
+Enter host password for user 'elastic':
+{
+  "license" : {
+    "status" : "active",
+    "uid" : "9fbe79c9-1016-4a98-81a2-9750b345bbd9",
+    "type" : "basic",
+    "issue_date" : "2021-06-14T15:32:51.440Z",
+    "issue_date_in_millis" : 1623684771440,
+    "max_nodes" : 1000,
+    "issued_to" : "test-cluster",
+    "issuer" : "elasticsearch",
+    "start_date_in_millis" : -1
+  }
+}
+```
+
 # Add a platinum license
+
+Acquire a license from Elastic.  You can activate a trial license from within Kibana if you do not have a physical license file.
+
 ```
 curl --cacert files/certs/ca/ca.crt \
   -XPUT -u elastic \
@@ -213,7 +246,7 @@ curl --cacert files/certs/ca/ca.crt \
   -d @/Users/droscigno/Downloads/license-release-stack-platinum.json 
 ```
 
-# Verify the license change
+# Verify the license change (look for the license type of `platinum`)
 ```
 curl --cacert files/certs/ca/ca.crt \
   -u elastic 'https://192.168.33.25:9200/_license'
@@ -242,13 +275,36 @@ openssl s_client -connect 192.168.33.27:9200 \
   -text | egrep "Subject: CN=|IP Address"
 ```
 
+Look for the names and IP addresses from the `inventory.yml` file.  For example:
+```
+        Subject: CN=es-master-1
+                IP Address:192.168.33.25
+```
+
 # Set passwords
-Use a Vagrant command to run the `elasticsearch-setup-passwords` command on `es-master-1`
+Use a Vagrant command to run the `elasticsearch-setup-passwords` command on `es-master-1`.  In the sample credentials.yml file created earlier with the `ansible-vault create vars/credentials.yml` command I showed a single password.  For test environments I use a single password for all of the default accounts.  Please do not do this in production, modify the scripts used to deploy your system to use the various account names and set proper individual passwords.
 
 ```
 vagrant ssh -c \
   "sudo --user=elasticsearch /usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive" \
   es-master-1
+```
+
+Sample output:
+```
+Initiating the setup of passwords for reserved users elastic,apm_system,kibana,kibana_system,logstash_system,beats_system,remote_monitoring_user.
+You will be prompted to enter passwords as the process progresses.
+Please confirm that you would like to continue [y/N]y
+
+
+Enter password for [elastic]: 
+Reenter password for [elastic]: 
+Enter password for [apm_system]: 
+Reenter password for [apm_system]: 
+Enter password for [kibana_system]:
+.
+.
+.
 ```
 
 # Deploy Logstash
@@ -281,5 +337,19 @@ will be prompted to download and install Metricbeat.  Skip this and close the
 setup wizard and exit setup and you will likely have monitoring data 
 available.
 
+Note: The elastic password that you used in the `curl` commands earlier was the default one (`changeme`); when you log in this time through the browser use the account name `elastic`, and the password that you put in the `credentials.yml` file.
+
 https://192.168.33.28:5601/app/monitoring
 
+# Cleanup 
+To remove everything:
+
+```
+vagrant destroy
+```
+
+To remove a single VM:
+
+```
+vagrant destroy <<machine name from inventory.yml>>
+```
