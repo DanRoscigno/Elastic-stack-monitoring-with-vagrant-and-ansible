@@ -107,6 +107,18 @@ instances:
   - name: "es-data-2"
     ip:
       - "192.168.33.27"
+  - name: 'kibana-1'
+    ip:
+      - "192.168.33.28"
+  - name: 'logstash-1'
+    ip:
+      - "192.168.33.29"
+  - name: 'fleet-1'
+    ip:
+      - "192.168.33.30"
+  - name: 'fleet-2'
+    ip:
+      - "192.168.33.31"
 ```
 
 When this file gets used a separate certificate is created for each node, and all are signed with the CA that is also created.   By adding the IP address and hostname to each certificate Logstash will be able to connect.

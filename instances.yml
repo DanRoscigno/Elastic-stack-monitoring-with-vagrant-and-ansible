@@ -14,3 +14,9 @@ instances:
   - name: 'logstash-1'
     ip:
       - "192.168.33.29"
+  - name: 'fleet-1'
+    ip:
+      - "192.168.33.30"
+  - name: 'fleet-2'
+    ip:
+      - "192.168.33.31"

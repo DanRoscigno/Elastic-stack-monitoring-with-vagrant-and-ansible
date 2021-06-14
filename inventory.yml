@@ -36,3 +36,17 @@ logstash_nodes:
       memory: 2048
       ansible_ssh_private_key_file: .vagrant/machines/logstash-1/virtualbox/private_key
 
+fleet_nodes:
+  hosts:
+    fleet-1:
+      ansible_host: 192.168.33.30
+      ansible_user: vagrant
+      memory: 2048
+      ansible_ssh_private_key_file: .vagrant/machines/fleet-1/virtualbox/private_key
+
+    fleet-2:
+      ansible_host: 192.168.33.31
+      ansible_user: vagrant
+      memory: 2048
+      ansible_ssh_private_key_file: .vagrant/machines/fleet-2/virtualbox/private_key
+
