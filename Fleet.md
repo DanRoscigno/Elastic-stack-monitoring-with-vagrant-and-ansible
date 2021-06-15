@@ -4,10 +4,17 @@ In Kibana hamburger > Management > Fleet
 Top right corner, Gear symbol > Fleet Settings
 
 Add Fleet servers, use the IP addrs from the inventory.yml and port 8220.  Type the URL in and hit enter for each Fleet host:
-`https://192.168.33.30:8220 https://192.168.33.31:8220`
+```
+https://192.168.33.30:8220
+https://192.168.33.31:8220
+```
 
 Set the Elasticsearch servers, again using the IP addrs from the inventory.yml
-`https://192.168.33.25:9200 https://192.168.33.26:9200 https://192.168.33.27:9200`
+```
+https://192.168.33.25:9200
+https://192.168.33.26:9200
+https://192.168.33.27:9200
+```
 
 In the panel `Elasticsearch output configuration (YAML)` specify the TLS certificate authority with the full path to the ca.crt:
 ```
