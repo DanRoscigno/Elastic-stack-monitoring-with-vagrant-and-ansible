@@ -1,0 +1,39 @@
+bootstrap.memory_lock: false
+cluster.initial_master_nodes: es-master-1
+cluster.name: test-cluster
+http.port: 9200
+network.host: 192.168.33.25
+node.data: false
+node.master: true
+xpack.security.authc.realms.file.file1.order: 0
+xpack.security.authc.realms.native.native1.order: 1
+xpack.security.http.ssl.verification_mode: certificate
+
+
+
+node.name: es-master-1
+
+#################################### Paths ####################################
+
+# Path to directory containing configuration (this file and logging.yml):
+
+path.data: /var/lib/elasticsearch
+
+path.logs: /var/log/elasticsearch
+
+
+action.auto_create_index: true
+
+xpack.security.enabled: true
+
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: "certificate"
+xpack.security.transport.ssl.key: "/etc/elasticsearch/certs/es-master-1.key"
+xpack.security.transport.ssl.certificate: "/etc/elasticsearch/certs/es-master-1.crt"
+xpack.security.transport.ssl.certificate_authorities: "/etc/elasticsearch/certs/ca.crt"
+
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: "/etc/elasticsearch/certs/es-master-1.key"
+xpack.security.http.ssl.certificate: "/etc/elasticsearch/certs/es-master-1.crt"
+xpack.security.http.ssl.certificate_authorities: "/etc/elasticsearch/certs/ca.crt"
+

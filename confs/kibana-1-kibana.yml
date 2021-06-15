@@ -1,0 +1,14 @@
+elasticsearch.hosts: ["https://192.168.33.25:9200", "https://192.168.33.26:9200", "https://192.168.33.27:9200"]
+server.host: "192.168.33.28"
+server.name: "kibana-1"
+elasticsearch.password: "supersecret"
+elasticsearch.username: kibana_system
+logging.dest: /var/log/kibana/kibana.log
+server.port: "5601"
+xpack.encryptedSavedObjects.encryptionKey: "something_at_least_32_characters"
+xpack.security.audit.enabled: true
+
+server.ssl.enabled: true
+server.ssl.certificate: /etc/kibana/config/certs/kibana-1.crt
+server.ssl.key: /etc/kibana/config/certs/kibana-1.key
+elasticsearch.ssl.certificateAuthorities: [ "/etc/kibana/config/certs/ca.crt" ]
