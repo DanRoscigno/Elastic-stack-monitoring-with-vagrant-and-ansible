@@ -41,7 +41,8 @@ This project uses the following Ansible roles:
 
 # Commands for macOS Catalina setup
 ```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+/bin/bash -c \
+   "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 brew install pyenv
 
@@ -190,7 +191,9 @@ Install Metricbeat
 Note: Metricbeat will not connect until the passwords are set in Elasticsearch, which you will do in a few steps.  You will be prompted for the password that you used to encrypt the vault.
 
 ```
-ansible-playbook -v -i inventory.yml deploy-beats.yml --ask-vault-pass
+ansible-playbook -v -i inventory.yml \
+   deploy-beats.yml \
+   --ask-vault-pass
 ```
 
 This command takes a while to run.  It is deploying Metricbeat on all fo the virtual machines.  At the end the summary will tell you how things went.  You should see many (25) `OK`, and many (12) `skipped` statuses.  You can scroll back through the output to see the details.
@@ -198,7 +201,9 @@ This command takes a while to run.  It is deploying Metricbeat on all fo the vir
 # Deploy Elasticsearch
 Run the Ansible playbook `deploy-elasticsearch.yml`
 ```
-ansible-playbook -v -i inventory.yml deploy-elasticsearch.yml --ask-vault-pass
+ansible-playbook -v -i inventory.yml \
+   deploy-elasticsearch.yml \
+   --ask-vault-pass
 
 ```
 
@@ -211,15 +216,16 @@ There are several curl commands, and as we have enabled security you will be pro
 Use the `ca/ca.crt` file that is in `files/certs/ca/ca.crt`.  You may be tempted to add a `-k` to all of your curl commands to avoid verifying the SSL cert, but test it at least once using the ca.crt
 ```
 curl --cacert files/certs/ca/ca.crt \
-  -u elastic 'https://192.168.33.25:9200/_cat/nodes?v'
+   -u elastic \
+   'https://192.168.33.25:9200/_cat/nodes?v'
 ```
 
 Sample output:
 ```
 ip            heap.percent ram.percent cpu load_1m load_5m load_15m node.role  master name
-192.168.33.25           12          81   2    0.00    0.09     0.12 ilmr       *      es-master-1
-192.168.33.27           10          80   4    0.02    0.14     0.11 cdfhilrstw -      es-data-2
-192.168.33.26           27          80   3    0.31    0.17     0.13 cdfhilrstw -      es-data-1
+192.168.33.25       12          81     2    0.00    0.09     0.12   ilmr       *    es-master-1
+192.168.33.27       10          80     4    0.02    0.14     0.11   cdfhilrstw -    es-data-2
+192.168.33.26       27          80     3    0.31    0.17     0.13   cdfhilrstw -    es-data-1
 ```
 
 # Check the license status
@@ -323,14 +329,18 @@ Enter password for [kibana_system]:
 
 Run the Ansible playbook `deploy-logstash.yml`
 ```
-ansible-playbook -v -i inventory.yml deploy-logstash.yml --ask-vault-pass
+ansible-playbook -v -i inventory.yml \
+   deploy-logstash.yml \
+   --ask-vault-pass
 ```
 
 # Deploy Kibana
 
 Run the Ansible playbook `deploy-kibana.yml`
 ```
-ansible-playbook -v -i inventory.yml deploy-kibana.yml --ask-vault-pass
+ansible-playbook -v -i inventory.yml \
+   deploy-kibana.yml \
+   --ask-vault-pass
 ```
 
 # Open a browser to stack monitoring in Kibana
