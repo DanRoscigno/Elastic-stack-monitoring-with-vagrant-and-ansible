@@ -20,6 +20,7 @@ In the panel `Elasticsearch output configuration (YAML)` specify the TLS certifi
 ```
 ssl.certificate_authorities: ["/vagrant/files/certs/ca/ca.crt"]
 ```
+![Fleet Server settings flyout](https://raw.githubusercontent.com/DanRoscigno/Elastic-stack-monitoring-with-vagrant-and-ansible/main/images/FleetSettings.png)
 
 # Generate the service token 
 The service token is used to specify the Fleet server process running in the Elastic Agent.
@@ -87,6 +88,7 @@ To add an Agent on a second server that is managed by the Fleet server running i
 - Select the new policy
 - Add integrations (for example, System and MySQL)
 - Customize the integrations (for example, set the password for MySQL metric collection)
+![MySQL user and password settings](https://raw.githubusercontent.com/DanRoscigno/Elastic-stack-monitoring-with-vagrant-and-ansible/main/images/MySQL-details.png)
 - Retrieve the enrollment token from Kibana > hamburger > Fleet > Agents > Enrollment Tokens
     - Click the view icon (eye icon) for the new policy
     - Copy the enrollment token from the Secret column
