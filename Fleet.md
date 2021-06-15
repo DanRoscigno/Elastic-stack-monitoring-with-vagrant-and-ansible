@@ -112,3 +112,11 @@ or maybe:
 sudo systemctl start elastic-agent
 sudo systemctl status elastic-agent
 ```
+
+# MySQL
+If you added the MySQL integration you might as well test it.  Install MySQL on the machine where you added the second Elastic Agent:
+```
+sudo apt-get install mysql-server
+```
+
+When prompted for the root password for MySQL use the password that you put in the policy, or even better use somethign different.  If you used a different password then you will see errors in the MySQL logs (in Kibana).  Fix the error by updating the policy, and notice that when you save the update to the policy the agent process is soon restarted and the metrics will start flowing.
