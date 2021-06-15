@@ -363,6 +363,10 @@ Note: The elastic password that you used in the `curl` commands earlier was the 
 
 https://192.168.33.28:5601/app/monitoring
 
+# Fleet server and Elastic Agent
+
+Add [Fleet server](https://github.com/DanRoscigno/Elastic-stack-monitoring-with-vagrant-and-ansible/blob/main/Fleet.md)
+
 # Cleanup 
 To remove everything:
 
