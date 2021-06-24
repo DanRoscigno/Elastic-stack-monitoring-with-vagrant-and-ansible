@@ -8,7 +8,7 @@
 require 'rbconfig'
 require 'yaml'
 
-DEFAULT_BASE_BOX = "bento/ubuntu-16.04"
+DEFAULT_BASE_BOX = "bento/ubuntu-18.04"
 cpuCap = 50                                                    # Limit to 50% of the cpu
 inventory = YAML.load_file("inventory.yml")                    # Get guest host names & ip
 VAGRANTFILE_API_VERSION = '2'

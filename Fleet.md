@@ -25,7 +25,7 @@ ssl.certificate_authorities: ["/vagrant/files/certs/ca/ca.crt"]
 # Generate the service token 
 The service token is used to specify the Fleet server process running in the Elastic Agent.
 
-Click the Agents tab (NOT add agent), and generate the token (I don't remember exactly what the UI shows, and I no longer see the content as I have generated the service token).  Store the token in a safe place, maybe in the ansible-vault.  If you are using a .deb or a .rpm to deploy Agent then you also need an Enrollment token.  These are available on the same page as the service token under the Enrollment Tokens tab.  Switch there and view / copy the secret for the Default Fleet Server policy.
+Click the Agents tab (NOT add agent), and generate the token (I don't remember exactly what the UI shows, and I no longer see the content as I have generated the service token).  Store the token in a safe place, maybe in the ansible-vault.  
 
 # Install Elastic Agent on the box(es) that will be Fleet servers
 
@@ -61,7 +61,6 @@ sudo /usr/bin/elastic-agent enroll \
    --fleet-server-es=https://192.168.33.25:9200 \
    --fleet-server-es-ca=/vagrant/files/certs/ca/ca.crt \
    --fleet-server-service-token=<< your service token here >> \
-   --enrollment-token=<< your enrollment token here >> \
    --ca-sha256=/vagrant/files/certs/ca/ca.crt \
    --fleet-server-cert=/vagrant/files/certs/fleet-1/fleet-1.crt \
    --fleet-server-cert-key=/vagrant/files/certs/fleet-1/fleet-1.key
